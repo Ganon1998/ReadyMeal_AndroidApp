@@ -41,9 +41,7 @@ public class HomePage extends AppCompatActivity {
         //instantiating the database
         final AppDatabase Local_db = Room.databaseBuilder(getApplicationContext(), AppDatabase.class, "User_db").build();
         //
-        if (Meals.UserCalories > (Meals.TotalCalories() + 150) && Meals.CarbsLunch == null)
-            GETRequestCarbs();
-
+        GETRequestCarbs();
 
         Executor myExecutor = Executors.newSingleThreadExecutor();
         myExecutor.execute(() -> {
@@ -54,8 +52,6 @@ public class HomePage extends AppCompatActivity {
             GreetUser.setText("Hello,\t" + userFirstName + ' ' + userLastName);
 
         });
-
-        Local_db.close();
 
     }
 
@@ -89,6 +85,7 @@ public class HomePage extends AppCompatActivity {
 
     public void GETRequestCarbs ()
     {
+        final float[] TotalCalories = {0};
 
         ArrayList<String> Carbs = new ArrayList<>();
         Carbs.add("pastas");
@@ -103,56 +100,51 @@ public class HomePage extends AppCompatActivity {
         String APIurlC = "https://api.nal.usda.gov/fdc/v1/foods/search?api_key=mOYUdPGUOJOJQJxoKffVm7buXQNzz5oKj7oqEBnX&query=" + Carbs.get(i);
         final String UserCarbs = Carbs.get(i);
         final int min = 4;
-        final float CalUnder = ((Meals.UserCalories - Meals.TotalCalories()) / 2);
 
         JsonObjectRequest ObjReqCarb = new JsonObjectRequest(
                 Request.Method.GET,
                 APIurlC,
                 null,
-                response -> {
-                    try {
-                        // get an array of JSON objects that are Arrays of "foods"
-                        JSONArray jsonArray = response.getJSONArray("foods");
+                new Response.Listener<JSONObject>() {
+                    @Override
+                    public void onResponse(JSONObject response) {
+                        try {
+                            // get an array of JSON objects that are Arrays of "foods"
+                            JSONArray jsonArray = response.getJSONArray("foods");
 
-                        int index = min + (int)(Math.random() * ((15 - min) + 1));
+                            int index = min + (int)(Math.random() * ((15 - min) + 1));
 
-                        JSONObject foodFav = jsonArray.getJSONObject(index);
+                            JSONObject foodFav = jsonArray.getJSONObject(index);
 
-                        JSONArray TempJsonObj = foodFav.getJSONArray("foodNutrients");
-                        JSONObject JSONCal = (JSONObject) TempJsonObj.get(3);
-                        while (JSONCal.getInt("value") == 0.0)
-                        {
-                            if (index++ == jsonArray.length())
-                                index = 0;
-                            else
-                                index++;
+                            JSONArray TempJsonObj = foodFav.getJSONArray("foodNutrients");
+                            JSONObject JSONCal = (JSONObject) TempJsonObj.get(3);
+                            Meals.CarbsLunch = foodFav.getString("lowercaseDescription");
+                            Meals.carbCalLunch = JSONCal.getInt("value");
+
+                            index = min + (int)(Math.random() * ((15 - min) + 1));
+
+                            foodFav = jsonArray.getJSONObject(index);
+
+                            TempJsonObj = foodFav.getJSONArray("foodNutrients");
+                            JSONCal = (JSONObject) TempJsonObj.get(3);
+                            Meals.CarbsDinner = foodFav.getString("lowercaseDescription");
+                            Meals.carbCalDinner = JSONCal.getInt("value");
+
+
+
                         }
-                        Meals.CarbsLunch = foodFav.getString("lowercaseDescription");
-                        Meals.carbCalLunch = JSONCal.getInt("value");
-
-                        index = min + (int)(Math.random() * ((15 - min) + 1));
-                        foodFav = jsonArray.getJSONObject(index);
-                        TempJsonObj = foodFav.getJSONArray("foodNutrients");
-                        JSONCal = (JSONObject) TempJsonObj.get(3);
-
-                        while (JSONCal.getInt("value") == 0.0)
-                        {
-                            if (index++ == jsonArray.length())
-                                index = 0;
-                            else
-                                index++;
+                        // end of try in case JSON Request is invalid or something
+                        catch(JSONException e) {
+                            e.printStackTrace();
                         }
-
-                        Meals.CarbsDinner = foodFav.getString("lowercaseDescription");
-                        Meals.carbCalDinner = JSONCal.getInt("value");
-
-                    }
-                    // end of try in case JSON Request is invalid or something
-                    catch(JSONException e) {
-                        e.printStackTrace();
                     }
                 }, // end of API listener description
-                error -> error.printStackTrace()
+                new Response.ErrorListener() {
+                    @Override
+                    public void onErrorResponse(VolleyError error) {
+                        error.printStackTrace();
+                    }
+                }
         );
         //ReqQ.add(ObjReqCarb);
         Volley.newRequestQueue(getApplicationContext()).add(ObjReqCarb);
