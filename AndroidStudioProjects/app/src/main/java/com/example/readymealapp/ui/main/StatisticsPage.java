@@ -69,6 +69,10 @@ public class StatisticsPage extends AppCompatActivity {
             PrintAge = findViewById(R.id.age_out);
             PrintAge.setText(Integer.toString(userAge));
 
+            TextView MessageReport;
+            MessageReport = findViewById(R.id.caloric_goal_test2);
+            MessageReport.setText("You are currently " + userAge + " and a Body Mass Index of " + userBMI);
+
         });
 
         // View Flipper to switch between the card views and the graph view
@@ -89,7 +93,7 @@ public class StatisticsPage extends AppCompatActivity {
         bar.xAxis(0).title("Meal Type");
         bar.yAxis(0).title("Calories");
 
-        AnyChartView barChartView = (AnyChartView) findViewById(R.id.bar_chart_view);
+        AnyChartView barChartView = findViewById(R.id.bar_chart_view);
         barChartView.setChart(bar);
 
         // Removing the Parent otherwise we receive an error

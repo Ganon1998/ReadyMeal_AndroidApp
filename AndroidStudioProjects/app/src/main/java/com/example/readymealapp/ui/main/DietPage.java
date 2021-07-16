@@ -1,5 +1,6 @@
 package com.example.readymealapp.ui.main;
 
+import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
 import android.util.Log;
@@ -21,11 +22,14 @@ import com.android.volley.toolbox.Volley;
 import com.example.readymealapp.AppDatabase;
 import com.example.readymealapp.HomePage;
 import com.example.readymealapp.R;
+import com.google.gson.Gson;
+import com.google.gson.reflect.TypeToken;
 
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -49,6 +53,7 @@ public class DietPage extends AppCompatActivity {
 
     String DinnerVeggies;
     float DinnerCalVeggies = 0;
+    List<Meals> mealList;
     final float[] TotalCalories = {0};
 
 
@@ -58,13 +63,32 @@ public class DietPage extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.diet);
 
-        GETRequestVegs();
+        if (Meals.UserCalories > (Meals.TotalCalories() + 100) || Meals.VeggiesLunch == null)
+            GETRequestVegs();
 
         showBreakfast();
         showLunch();
         showDinner();
         showCarbsLunch();
         showCarbsDinner();
+
+        /*
+        // store record of meal plan
+        mealList.add(Meals.returnMeal());
+        String strFromObj = stringFromObject(mealList);
+
+        Context context = getApplicationContext();
+        final AppDatabase Local_db = Room.inMemoryDatabaseBuilder(context, "User_db")
+
+        //Save to database
+        Executor myExecutor = Executors.newSingleThreadExecutor();
+        myExecutor.execute(() -> {
+            Local_db.userDao().StoreMeal(strFromObj);
+        });
+
+        Local_db.close();
+
+         */
 
 
         //GETRequestCarbs(TotalCalories);
@@ -126,6 +150,22 @@ public class DietPage extends AppCompatActivity {
         userMealTextView1.setText(veggiesLunchString);
     }
 
+    public String stringFromObject(List<Meals> list){
+
+        Gson gson = new Gson();
+        String jsonString = gson.toJson(list);
+        return jsonString;
+
+    }
+
+    public List<Meals> getObjectFromString(String jsonString){
+
+        Type listType = new TypeToken<ArrayList<Meals>>(){}.getType();
+        List<Meals> list = new Gson().fromJson(jsonString, listType);
+        return list;
+
+    }
+
 
     private void GETRequestVegs()
     {
@@ -135,12 +175,9 @@ public class DietPage extends AppCompatActivity {
         Second.add("broccolis");
         Second.add("spinaches");
         Second.add("peas");
-        Second.add("pastas");
-        Second.add("rices");
-        Second.add("breads");
 
         Random random = new Random();
-        int i = random.nextInt(7);
+        int i = random.nextInt(4);
         int min = 3;
 
         if (Second.get(i).equals("peas") || Second.get(i).equals("beans"))
@@ -148,7 +185,6 @@ public class DietPage extends AppCompatActivity {
 
         String APIurlV = "https://api.nal.usda.gov/fdc/v1/foods/search?api_key=mOYUdPGUOJOJQJxoKffVm7buXQNzz5oKj7oqEBnX&query=" + Second.get(i);
         final String UserSecond = Second.get(i);
-        Log.d("sory", UserSecond);
 
         /////// code for using a GET request for JSON object from API ///////
         ////////////////////////////////////////////////////////////////////
@@ -158,111 +194,61 @@ public class DietPage extends AppCompatActivity {
                 Request.Method.GET,
                 APIurlV,
                 null,
-                new Response.Listener<JSONObject>() {
-                    @Override
-                    public void onResponse(JSONObject response) {
-                        try {
-                            // get an array of JSON objects that are Arrays of "foods"
+                response -> {
+                    try {
+                        // get an array of JSON objects that are Arrays of "foods"
 
-                            JSONArray jsonArray = response.getJSONArray("foods");
+                        JSONArray jsonArray = response.getJSONArray("foods");
 
-                            int index = finalMin + (int)(Math.random() * ((18 - finalMin) + 1));
+                        int index = finalMin + (int)(Math.random() * ((18 - finalMin) + 1));
 
-                            JSONObject foodFav = jsonArray.getJSONObject(index);
-                            //String foodName = foodFav.getString("lowercaseDescription"); // title of the food, also might be index 3 if using JsonObjectRequest
+                        JSONObject foodFav = jsonArray.getJSONObject(index);
+                        //String foodName = foodFav.getString("lowercaseDescription"); // title of the food, also might be index 3 if using JsonObjectRequest
 
-                            JSONArray TempJsonObj = foodFav.getJSONArray("foodNutrients");
-                            JSONObject JSONCal = (JSONObject) TempJsonObj.get(3);
-                            TotalCalories[0] += JSONCal.getInt("value");
-                            LunchCalVeggies = JSONCal.getInt("value");
-
-                            LunchVeggies = foodFav.getString("lowercaseDescription");
-                            Meals.VeggiesLunch = LunchVeggies;
-                            Meals.vegCalLunch = LunchCalVeggies;
-
-
-                            index = finalMin + (int)(Math.random() * ((18 - finalMin) + 1));
-
-                            foodFav = jsonArray.getJSONObject(index);
-                            //foodName = foodFav.getString("lowercaseDescription"); // title of the food, also might be index 3 if using JsonObjectRequest
-                            DinnerVeggies = foodFav.getString("lowercaseDescription");
-                            DinnerCalVeggies = JSONCal.getInt("value");
-                            Meals.GETCalTotal += TotalCalories[0];
-
-                            /*
-                            // loop through this jsonArray to look for the user's food
-                            while (found == false)
-                            {
-                                 StringTokenizer tokFood = new StringTokenizer(foodName); // tokenizes string to find the keyword, ie food preference
-
-
-                                // when string is parsed, look for the keyword for user
-                                while (tokFood.hasMoreTokens())
-                                {
-                                    Log.d("Tag", "I love memes");
-                                    // if the tokenized food name found in request equals the user's food preference, then store the calories
-                                    if (tokFood.nextToken().toLowerCase().equals(UserSecond.toLowerCase()))
-                                    {
-
-                                        // if we have reached the max calories OR all the main meals have been added to class "Meals" then we'll display everything in the Meals class
-                                        if (TotalCalories[0] >= Meals.UserCalories)
-                                        {
-                                            Log.d("myTag", "Gonna print Veggies!");
-                                            found = true;
-                                            break;
-                                            // display to user the info about their meal plan
-                                        }
-                                        else
-                                        {
-                                            //Log.d("myTag", "Got into the else to set breakfast name!");
-                                            // looks to see if breakfast, lunch, and dinner have been fulfilled yet
-                                            // if not fulfilled it'll set the name of the food to the Meal's static string and set that meal's calories too
-                                            if (Meals.VeggiesLunch == null)
-                                            {
-                                                LunchVeggies = foodFav.getString("lowercaseDescription");
-                                                Meals.VeggiesLunch = LunchVeggies;
-
-                                                //temp = foodFav.getString("KCAL");
-                                                LunchCalVeggies = JSONCal.getInt("value");
-                                                Meals.vegCalLunch = LunchCalVeggies;
-                                                break;
-                                            }
-                                            else if(Meals.VeggiesDinner == null)
-                                            {
-
-                                                // this ends.....display info to user
-                                                found = true;
-                                                break;
-                                            }
-                                        }
-                                        // end of if token matches user's food preference
-
-                                    }
-                                    // else, don't set the calories
-                                }
-                                // end of while loop token
-                            }
-                            // end of JSON while loop
-                             */
-                            //showCarbsLunch();
-                            //showCarbsDinner();
-                            showVeggiesLunch();
-                            showVeggiesDinner();
-
+                        JSONArray TempJsonObj = foodFav.getJSONArray("foodNutrients");
+                        JSONObject JSONCal = (JSONObject) TempJsonObj.get(3);
+                        while (JSONCal.getInt("value") == 0.0)
+                        {
+                            if (index++ == jsonArray.length())
+                                index = 0;
+                            else
+                                index++;
                         }
-                        // end of try in case JSON Request is invalid or something
-                        catch(JSONException e) {
-                            e.printStackTrace();
+                        LunchCalVeggies = JSONCal.getInt("value");
+                        LunchVeggies = foodFav.getString("lowercaseDescription");
+                        Meals.VeggiesLunch = LunchVeggies;
+                        Meals.vegCalLunch = LunchCalVeggies;
+
+
+                        index = finalMin + (int)(Math.random() * ((18 - finalMin) + 1));
+                        foodFav = jsonArray.getJSONObject(index);
+                        TempJsonObj = foodFav.getJSONArray("foodNutrients");
+                        JSONCal = (JSONObject) TempJsonObj.get(3);
+                        while (JSONCal.getInt("value") == 0.0)
+                        {
+                            if (index++ == jsonArray.length())
+                                index = 0;
+                            else
+                                index++;
                         }
+                        DinnerCalVeggies = JSONCal.getInt("value");
+                        DinnerVeggies = foodFav.getString("lowercaseDescription");
+                        Meals.VeggiesDinner = DinnerVeggies;
+                        Meals.vegCalDinner = DinnerCalVeggies;
+
+                        //showCarbsLunch();
+                        //showCarbsDinner();
+                        showVeggiesLunch();
+                        showVeggiesDinner();
+
+                    }
+                    // end of try in case JSON Request is invalid or something
+                    catch(JSONException e) {
+                        e.printStackTrace();
                     }
                 },
                 // end of API listener description
-                new Response.ErrorListener() {
-                    @Override
-                    public void onErrorResponse(VolleyError error) {
-                        error.printStackTrace();
-                    }
-                }
+                error -> error.printStackTrace()
 
         );
 

@@ -94,9 +94,9 @@
                         android:layout_marginLeft="10dp"
                         android:layout_marginTop="30dp"
                         android:fontFamily="@font/graphikregular"
-                        android:text="You are currently 23 years old,
-                                      with a height of 6 feet 0 inches,
-                                      and a Body Mass Index of 18.0."
+                        android:text="You are currently  years old,
+                                      with a height of  feet  inches,
+                                      and a Body Mass Index of ."
                         android:textColor="#ffffff"
                         android:textSize="16sp" />
 

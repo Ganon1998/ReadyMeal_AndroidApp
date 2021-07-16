@@ -9,6 +9,8 @@ import androidx.room.OnConflictStrategy;
 import androidx.room.Query;
 import androidx.room.Update;
 
+import com.example.readymealapp.ui.main.Meals;
+
 import java.util.List;
 
 @Dao
@@ -65,6 +67,12 @@ public interface UserDao {
 
     @Query("DELETE FROM user")
     void NukeTable();
+
+    /*
+    @Query("UPDATE user SET Meal_plans=(:mealList) WHERE ID = 0")
+    String StoreMeal(String mealList);
+
+     */
 
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)

@@ -5,6 +5,10 @@ import androidx.room.ColumnInfo;
 import androidx.room.Entity;
 import androidx.room.PrimaryKey;
 
+import com.example.readymealapp.ui.main.Meals;
+
+import java.util.List;
+
 @Entity
 public class User {
     @PrimaryKey(autoGenerate = false)
@@ -39,6 +43,12 @@ public class User {
 
     @ColumnInfo(name = "Activity")
     public String UserActivity;
+
+    /*
+    @ColumnInfo(name = "Meal_plans")
+    public List<String> meals;
+
+     */
 
 
     /*public User(int UserID, String FName, String LName, String FoodFav, String UserSex, int UserAge, int UserBMI, int Calories)

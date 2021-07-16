@@ -29,6 +29,7 @@ public class Meals
     public static float UserCalories;
 
     public static int GETCalTotal;
+    private static Meals MealReturn;
 
 
     // constructor
@@ -60,5 +61,30 @@ public class Meals
         Total += breakCal + mainCalLunch + vegCalLunch + carbCalLunch + mainCalDinner + vegCalDinner + carbCalDinner;
 
         return Total;
+    }
+
+    public static Meals returnMeal()
+    {
+        MealReturn.breakfast = Meals.breakfast;
+        MealReturn.Lunch = Meals.Lunch;
+        MealReturn.Dinner = Meals.Dinner;
+
+        MealReturn.CarbsLunch = Meals.CarbsLunch;
+        MealReturn.CarbsDinner = Meals.CarbsDinner;
+
+        Meals.VeggiesLunch = Meals.VeggiesLunch;
+        Meals.VeggiesDinner = Meals.VeggiesDinner;
+
+        MealReturn.breakCal = Meals.breakCal;
+
+        MealReturn.mainCalLunch = Meals.mainCalLunch;
+        MealReturn.carbCalLunch = Meals.carbCalLunch;
+        MealReturn.vegCalLunch = Meals.vegCalLunch;
+
+        MealReturn.mainCalDinner = Meals.mainCalDinner;
+        MealReturn.carbCalDinner = Meals.carbCalDinner;
+        MealReturn.vegCalDinner = Meals.vegCalDinner;
+
+        return MealReturn;
     }
 }
